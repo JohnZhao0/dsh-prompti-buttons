@@ -1,0 +1,4 @@
+# 提示词按钮 bundle：Host 行 + Client 半（经 package.json 的 dsh.client 声明）。
+- insert:
+    - id: prompt-buttons
+      name: '@local/dsh-prompt-buttons'

@@ -1,0 +1,29 @@
+{
+  "name": "@local/dsh-prompt-buttons",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Composer prompt-suffix toggle buttons (one-shot injection at send) plus a Plugin Settings hub page",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "meta": {
+    "title": "提示词按钮",
+    "description": "在输入框工具条放置可切换的提示词按钮，发送消息时在其末尾一次性注入对应提示词；设置页集中在「插件设置」。"
+  }
+}
