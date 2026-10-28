@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-prompt-buttons",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "description": "Composer prompt-suffix toggle buttons (one-shot injection at send) plus a Plugin Settings hub page",

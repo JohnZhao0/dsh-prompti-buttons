@@ -558,7 +558,7 @@ window.__ModuleLoader__.load({
         color: active ? 'var(--dsw-alias-bg-base)' : 'var(--dsw-alias-label-secondary)',
       }),
       page: { padding: '0 20px 24px', color: 'var(--dsw-alias-label-primary)', maxWidth: 760 },
-      tabs: { display: 'flex', gap: 4, borderBottom: '1px solid var(--dsw-alias-border-l1)', marginBottom: 16 },
+      tabs: { display: 'flex', gap: 12, flexWrap: 'wrap', borderBottom: '1px solid var(--dsw-alias-border-l1)', marginBottom: 16 },
       tab: (active) => ({
         font: 'inherit',
         fontSize: 13,
@@ -950,19 +950,27 @@ window.__ModuleLoader__.load({
     // ============================================================
     // 组件：③ 插件设置页（二级标签）
     // ============================================================
-    function PluginSettingsPage() {
+    function PluginSettingsPage({ useExtensionTabs, renderSlot }) {
       useSyncExternalStore(buttonStore.subscribe, buttonStore.get);
       const [tab, setTab] = useState('buttons');
+      const extensionTabs = useExtensionTabs(value => value);
+      const activeTab = tab === 'buttons' || tab === 'sound' || extensionTabs.some(row => row.id === tab) ? tab : 'buttons';
       return h(
         'div',
         { style: styles.page },
         h(
           'div',
           { style: styles.tabs },
-          h('button', { type: 'button', style: styles.tab(tab === 'buttons'), onClick: () => setTab('buttons') }, t('tabButtons')),
-          h('button', { type: 'button', style: styles.tab(tab === 'sound'), onClick: () => setTab('sound') }, t('tabSound'))
+          h('button', { type: 'button', style: styles.tab(activeTab === 'buttons'), onClick: () => setTab('buttons') }, t('tabButtons')),
+          h('button', { type: 'button', style: styles.tab(activeTab === 'sound'), onClick: () => setTab('sound') }, t('tabSound')),
+          ...extensionTabs.map(row => h('button', {
+            key: row.id, type: 'button', style: styles.tab(activeTab === row.id),
+            onClick: () => setTab(row.id),
+          }, row.label))
         ),
-        tab === 'buttons' ? h(ButtonsEditor) : h(AlertSoundPanel)
+        activeTab === 'buttons' ? h(ButtonsEditor)
+          : activeTab === 'sound' ? h(AlertSoundPanel)
+          : renderSlot('prompt-buttons.settings.tab', {}, { only: activeTab })
       );
     }
 
@@ -1000,9 +1008,37 @@ window.__ModuleLoader__.load({
             PromptButtonsBar
           )
         );
+        let tabsVersion = -1;
+        let localeRevision = -1;
+        let extensionTabs = [];
+        const tabsSource = {
+          getSnapshot() {
+            const version = ctx.slots.getVersion('prompt-buttons.settings.tab');
+            const revision = ctx.locale.getSnapshot().revision;
+            if (version !== tabsVersion || revision !== localeRevision) {
+              tabsVersion = version;
+              localeRevision = revision;
+              extensionTabs = ctx.slots.entries('prompt-buttons.settings.tab').map(entry => ({
+                id: entry.options.id,
+                order: entry.options.order ?? 0,
+                label: typeof entry.options.label === 'function' ? entry.options.label() : entry.options.label,
+              })).sort((a, b) => a.order - b.order);
+            }
+            return extensionTabs;
+          },
+          subscribe(listener) {
+            const offSlots = ctx.slots.subscribe('prompt-buttons.settings.tab', listener);
+            const offLocale = ctx.locale.subscribe(listener);
+            return () => { offSlots(); offLocale(); };
+          },
+        };
         ctx.slots.inject('settings.section', () =>
           ctx.slots.register(
-            { name: 'settings.section', id: 'plugin-settings', order: 44, label: () => t('nav') },
+            {
+              name: 'settings.section', id: 'plugin-settings', order: 44, label: () => t('nav'),
+              children: { 'prompt-buttons.settings.tab': { kind: 'list', scope: 'root' } },
+              inject: () => ({ hooks: { extensionTabs: tabsSource } }),
+            },
             PluginSettingsPage
           )
         );

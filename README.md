@@ -37,6 +37,17 @@ DeepSeek Harness（DSH）插件：**输入框提示词按钮** + **提醒音引�
 - **提示词按钮**：按钮的增删改、启用开关、恢复默认；
 - **提醒音**：上述提醒音的全部设置，改动即时生效。
 
+从 0.3.1 开始，其他 Client 插件可以注册 `prompt-buttons.settings.tab` 列表槽，将页面放在内置标签右侧。注册时提供唯一 `id`、数字 `order` 和本地化 `label`，组件使用 DSH 原生 slot renderer 渲染。标签沿用内置间距，窄屏换行；卸载当前扩展后返回“提示词按钮”。
+
+```js
+ctx.slots.inject('prompt-buttons.settings.tab', () => ctx.slots.register({
+  name: 'prompt-buttons.settings.tab', id: 'my-plugin', order: 10,
+  label: () => t('tab'),
+}, MySettingsPage));
+```
+
+扩展插件的 `dsh.client.inject` 应包含 `@local/dsh-prompt-buttons`。例如 Hidden Arrow 在此注册“HA强化”，排列在“提醒音”右侧。
+
 ## 安装
 
 ```sh
